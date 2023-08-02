@@ -44,7 +44,7 @@ client.on('interactionCreate', async (interaction) => {
                 `/information: Gives information about me!\n
                 /pop: I can give you a bit of bubble wrap for de-stressing.\n
                 /self-care: I can give you a self-care task out of a list of over 40 tasks!\n
-                /breathing: (This is still under construction - sorry!)\n
+                /breathing: provides an animated breathing exercise\n
                 /grounding: We can do a grounding exercise!\n
                 /yelling: If you need to yell into the void!\n
                 /say-something: If you feel like you need to say something into the void instead!\n
