@@ -1,6 +1,5 @@
 // VOID BOT
 // created by Néártsua (@neartsua) on Discord
-// No license granted. Please contact @neartsua.
 
 require('dotenv').config();
 const { Client, IntentsBitField, EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder, Collection, Events, AttachmentBuilder } = require('discord.js');
