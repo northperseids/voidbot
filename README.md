@@ -8,6 +8,8 @@ Current features are: a grounding exercise, breathing exercise, digital bubble w
 
 Void doesn't save any messages and all usage is "ephemeral," meaning Discord users cannot see bot usage of other users.
 
+The bot's invite link is here: https://discord.com/oauth2/authorize?client_id=1117526535243563238
+
 If you'd like to test the bot first, please join the support server below. The bot is in the support server and you can test out each of the functions.
 
 The support server for this bot is at https://discord.gg/ZAdZEmM6DW.
