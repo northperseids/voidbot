@@ -3,15 +3,13 @@
 
 require('dotenv').config();
 const { Client, IntentsBitField, EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder, Collection, Events, AttachmentBuilder } = require('discord.js');
-const fs = require('fs');
+const checkin = require('./checkin.js')
+const buttons = require('./buttons.js')
 
 const client = new Client({
     intents: [
-        IntentsBitField.Flags.Guilds,
-        IntentsBitField.Flags.GuildMembers,
-        IntentsBitField.Flags.GuildMessages,
-        IntentsBitField.Flags.MessageContent
-    ],
+        
+    ]
 })
 
 client.on('ready', (c) => {
@@ -22,6 +20,7 @@ client.on('ready', (c) => {
 client.on('interactionCreate', async (interaction) => {
     if (!interaction.isChatInputCommand()) return;
 
+    // INFO
     if (interaction.commandName === 'information') {
         const info = new EmbedBuilder()
             .setColor("#000000")
@@ -35,6 +34,7 @@ client.on('interactionCreate', async (interaction) => {
         interaction.reply({ embeds: [info], ephemeral: true })
     }
 
+    // HELP TEXT
     if (interaction.commandName === 'help') {
         const info = new EmbedBuilder()
             .setColor("#000000")
@@ -42,17 +42,18 @@ client.on('interactionCreate', async (interaction) => {
             .setDescription(
                 `/information: Gives information about me!\n
                 /pop: I can give you a bit of bubble wrap for de-stressing.\n
-                /self-care: I can give you a self-care task out of a list of over 40 tasks!\n
-                /breathing: provides an animated breathing exercise\n
+                /self-care: I can give you a self-care task out of a list of over 50 tasks!\n
+                /breathing: We can do an animated breathing exercise.\n
                 /grounding: We can do a grounding exercise!\n
                 /yelling: If you need to yell into the void!\n
                 /say-something: If you feel like you need to say something into the void instead!\n
+                /checkin: We can go through a guided check-in to see how you're doing!\n
                 Let me know if you need me!`
             )
         interaction.reply({ embeds: [info], ephemeral: true })
     }
 
-    // --------- BREATHING
+    // BREATHING
     if (interaction.commandName === 'breathing') {
         const file = new AttachmentBuilder('./resources/breathe.gif')
         const embed = new EmbedBuilder()
@@ -69,8 +70,7 @@ client.on('interactionCreate', async (interaction) => {
         })
     }
 
-
-    // --------- GROUNDING
+    // GROUNDING
     if (interaction.commandName === 'grounding') {
 
         // first set of see-hear-feel
@@ -287,7 +287,7 @@ client.on('interactionCreate', async (interaction) => {
 
     }
 
-    // ---------- YELLING
+    // YELLING
     if (interaction.commandName === 'yelling') {
         const yell = new EmbedBuilder()
             .setColor("#000000")
@@ -308,7 +308,7 @@ client.on('interactionCreate', async (interaction) => {
                 `I'll echo it back to you, okay? \n
             ${say}\n
             Now, whenever you're ready, you can dismiss this message. I won't save it - nobody will be able to see it.\n
-            Take a deep breath, and whenever you're ready, click the 'Dismiss message' option.\n
+            Take a deep breath, and whenever you're ready, click the 'Dismiss message' option to let it go.\n
             Let me know if you need me again!`
             )
         interaction.reply({ embeds: [saysomething], ephemeral: true })
@@ -344,10 +344,278 @@ client.on('interactionCreate', async (interaction) => {
             .setTitle(`Here's something you can try!`)
             .setDescription(
                 `If you need another one, just let me know!\n
-            I've got over 40 tasks I can give you!\n
+            I've got over 50 tasks I can give you!\n
             ${unquoted}`
             )
         interaction.reply({ embeds: [selfcare], ephemeral: true })
+    }
+
+    if (interaction.commandName === 'checkin') {
+
+        const response = await interaction.reply({
+                embeds: [checkin.intro],
+                components: [buttons.introRow],
+                ephemeral: true
+            })
+        
+        const collector = response.createMessageComponentCollector({ time: 900000 });
+
+        var sleepAfter = false;
+        var friendsAfter = false;
+        var funAfter = false;
+        var selfcareAfter = false;
+        var selfcareItem = null;
+        var eatenLater = false;
+        var journalLater = false;
+
+        collector.on('collect', async listen => {
+            if (listen.customId === 'introWell') {
+                await listen.deferUpdate();
+                await listen.editReply({ embeds: [checkin.introYes], components: [buttons.introYesRow] })
+            }
+            if (listen.customId === 'introBad') {
+                await listen.deferUpdate();
+                await listen.editReply({ embeds: [checkin.introNo], components: [buttons.introNoRow] })
+            }
+            if (listen.customId === 'introYesNo') {
+                await listen.deferUpdate();
+                await listen.editReply({ embeds: [checkin.drink], components: [buttons.drinkRow] })
+            }
+            if (listen.customId === 'introYesYes' || listen.customId === 'introContinue') {
+                await listen.deferUpdate();
+                await listen.editReply({ embeds: [checkin.physical], components: [buttons.physicalRow] })
+            }
+            if (listen.customId === 'physicalYes') {
+                await listen.deferUpdate();
+                await listen.editReply({ embeds: [checkin.physicalYes1], components: [buttons.physicalYes1Row] })
+            }
+            if (listen.customId === 'physicalNo') {
+                await listen.deferUpdate();
+                await listen.editReply({ embeds: [checkin.physicalContinue], components: [buttons.physicalContinueRow] })
+            }
+            if (listen.customId === 'physicalYes1') {
+                await listen.deferUpdate();
+                await listen.editReply({ embeds: [checkin.physicalYes2], components: [buttons.physicalYes2Row] })
+            }
+            if (listen.customId === 'physicalYes2') {
+                await listen.deferUpdate();
+                await listen.editReply({ embeds: [checkin.physicalYes3], components: [buttons.physicalYes3Row] })
+            }
+            if (listen.customId === 'physicalYes3') {
+                await listen.deferUpdate();
+                await listen.editReply({ embeds: [checkin.physicalYes4], components: [buttons.physicalContinueRow] })
+            }
+            if (listen.customId === 'physicalContinue') {
+                await listen.deferUpdate();
+                await listen.editReply({ embeds: [checkin.intangible], components: [buttons.intangibleRow] })
+            }
+            if (listen.customId === 'intangibleYes') {
+                await listen.deferUpdate();
+                await listen.editReply({ embeds: [checkin.intangibleYes1], components: [buttons.intangibleYes1Row] })
+            }
+            if (listen.customId === 'intangibleNo' || listen.customId === 'intangibleDistract2No' || listen.customId === 'intangibleDistract3No') {
+                await listen.deferUpdate();
+                await listen.editReply({ embeds: [checkin.intangibleContinue], components: [buttons.intangibleContinueRow] })
+            }
+            if (listen.customId === 'intangibleFocus') {
+                await listen.deferUpdate();
+                await listen.editReply({ embeds: [checkin.intangibleFocus1], components: [buttons.intangibleFocus1Row] })
+            }
+            if (listen.customId === 'intangibleFocus1') {
+                await listen.deferUpdate();
+                await listen.editReply({ embeds: [checkin.intangibleFocus2], components: [buttons.intangibleFocus2Row] })
+            }
+            if (listen.customId === 'intangibleFocus2') {
+                await listen.deferUpdate();
+                await listen.editReply({ embeds: [checkin.intangibleFocus3], components: [buttons.intangibleFocus3Row] })
+            }
+            if (listen.customId === 'intangibleFocus3') {
+                await listen.deferUpdate();
+                await listen.editReply({ embeds: [checkin.intangibleFocus4], components: [buttons.intangibleContinueRow] })
+                journalLater = true;
+            }
+            if (listen.customId === 'intangibleDistract') {
+                await listen.deferUpdate();
+                await listen.editReply({ embeds: [checkin.intangibleDistract1], components: [buttons.intangibleDistract1Row] })
+            }
+            if (listen.customId === 'intangibleDistract1') {
+                await listen.deferUpdate();
+                await listen.editReply({ embeds: [checkin.intangibleDistract2], components: [buttons.intangibleDistract2Row] })
+            }
+            if (listen.customId === 'intangibleDistract2Yes') {
+                const messages = require('./tasks.json')
+                const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+                const stringed = JSON.stringify(randomMessage, null, " ")
+                const activity = stringed.slice(1, -1)
+
+                const intangibleDistract3 = new EmbedBuilder()
+                    .setColor("#000000")
+                    .setTitle(`Let's find a distraction!`)
+                    .setDescription(`Let's try a self-care activity instead. Here's one! (You can do the activity after the check-in if it'll take too long! I'll remind you of it later.)\n\n${activity}`)
+                
+                await listen.deferUpdate();
+                await listen.editReply({ embeds: [intangibleDistract3], components: [buttons.intangibleDistract3Row] })
+                selfcareAfter = true;
+                selfcareItem = activity;
+            }
+            if (listen.customId === 'intangibleDistract3Yes') {
+                const messages = require('./tasks.json')
+                const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+                const stringed = JSON.stringify(randomMessage, null, " ")
+                const activity = stringed.slice(1, -1)
+
+                const intangibleDistract4 = new EmbedBuilder()
+                    .setColor("#000000")
+                    .setTitle(`Let's find a distraction!`)
+                    .setDescription(`Here's another one! (Remember, if it'll take too long, you can do the activity after we're done! I'll remind you of it later.)\n\n${activity}`)
+                
+                await listen.deferUpdate();
+                await listen.editReply({ embeds: [intangibleDistract4], components: [buttons.intangibleDistract3Row] })
+                selfcareAfter = true;
+                selfcareItem = activity;
+            }
+            if (listen.customId === 'intangibleContinue') {
+                await listen.deferUpdate();
+                await listen.editReply({ embeds: [checkin.drink], components: [buttons.drinkRow] })
+            }
+            if (listen.customId === 'drinkYes' || listen.customId === 'drinkDone') {
+                await listen.deferUpdate();
+                await listen.editReply({ embeds: [checkin.eaten], components: [buttons.eatenRow] })
+            }
+            if (listen.customId === 'drinkNo') {
+                await listen.deferUpdate();
+                await listen.editReply({ embeds: [checkin.drinkNo], components: [buttons.drinkNoRow] })
+            }
+            if (listen.customId === 'eatenYes' || listen.customId === 'eatenDone') {
+                await listen.deferUpdate();
+                await listen.editReply({ embeds: [checkin.medication], components: [buttons.medicationRow] })
+            }
+            if (listen.customId === 'eatenLater') {
+                await listen.deferUpdate();
+                await listen.editReply({ embeds: [checkin.medication], components: [buttons.medicationRow] })
+                eatenLater = true;
+            }
+            if (listen.customId === 'eatenNo') {
+                await listen.deferUpdate();
+                await listen.editReply({ embeds: [checkin.eatenNo], components: [buttons.eatenNoRow] })
+            }
+            if (listen.customId === 'medicationNo' || listen.customId === 'medicationDone') {
+                await listen.deferUpdate();
+                await listen.editReply({ embeds: [checkin.screenbreak], components: [buttons.screenbreakRow] })
+            }
+            if (listen.customId === 'medicationYes') {
+                await listen.deferUpdate();
+                await listen.editReply({ embeds: [checkin.medicationYes], components: [buttons.medicationYesRow] })
+            }
+            if (listen.customId === 'screenbreakNo') {
+                await listen.deferUpdate();
+                await listen.editReply({ embeds: [checkin.screenbreakNo], components: [buttons.screenbreakNoRow] })
+            }
+            if (listen.customId === 'screenbreakYes' || listen.customId === 'screenbreakDone') {
+                await listen.deferUpdate();
+                await listen.editReply({ embeds: [checkin.sleep], components: [buttons.sleepRow] })
+            }
+            if (listen.customId === 'sleepNo') {
+                await listen.deferUpdate();
+                await listen.editReply({ embeds: [checkin.sleepNo1], components: [buttons.sleepNo1Row] })
+                sleepAfter = true;
+            }
+            if (listen.customId === 'sleepYes') {
+                await listen.deferUpdate();
+                await listen.editReply({ embeds: [checkin.sleepYes], components: [buttons.sleepYesRow] })
+            }
+            if (listen.customId === 'sleepContinue' || listen.customId === 'sleepDone' || listen.customId === 'sleepNo2Done') {
+                await listen.deferUpdate();
+                await listen.editReply({ embeds: [checkin.friends], components: [buttons.friendsRow] })
+            }
+            if (listen.customId === 'sleepCant') {
+                await listen.deferUpdate();
+                await listen.editReply({ embeds: [checkin.sleepNo2], components: [buttons.sleepNo2Row] })
+            }
+            if (listen.customId === 'friendsYes') {
+                await listen.deferUpdate();
+                await listen.editReply({ embeds: [checkin.friendsYes], components: [buttons.friendsNo2Row] })
+            }
+            if (listen.customId === 'friendsDone') {
+                await listen.deferUpdate();
+                await listen.editReply({ embeds: [checkin.friendsYes], components: [buttons.friendsNo2Row] })
+                friendsAfter = true;
+            }
+            if (listen.customId === 'friendsNo') {
+                await listen.deferUpdate();
+                await listen.editReply({ embeds: [checkin.friendsNo1], components: [buttons.friendsNo1Row] })
+            }
+            if (listen.customId === 'friendsNo1') {
+                await listen.deferUpdate();
+                await listen.editReply({ embeds: [checkin.friendsNo2], components: [buttons.friendsNo2Row] })
+            }
+            if (listen.customId === 'friendsContinue') {
+                await listen.deferUpdate();
+                await listen.editReply({ embeds: [checkin.fun], components: [buttons.funRow] })
+            }
+            if (listen.customId === 'funNo') {
+                await listen.deferUpdate();
+                await listen.editReply({ embeds: [checkin.funNo], components: [buttons.funNoRow] })
+                funAfter = true;
+            }
+            if (listen.customId === 'funDone' || listen.customId === 'funYes') {
+                await listen.deferUpdate();
+                await listen.editReply({ embeds: [checkin.funYes], components: [buttons.funYesRow] })
+            }
+            if (listen.customId === 'funYesDone') {
+
+                const finish = new EmbedBuilder()
+                    .setColor("#000000")
+                    .setTitle(`You made it!`)
+
+                var promises = [];
+                var promiseString = '';
+                var selfcarereminder = '';
+                var count = 0;
+                var breakdown = '';
+                
+                if (sleepAfter === true) {
+                    promises.push(`\n- Please get some rest! (Remember, laying down helps, even if you don't actually sleep!)`)
+                    count += 1
+                }
+                if (friendsAfter === true) {
+                    promises.push('Reach out to a friend! (Just a "hello!" to get a conversation started is fine!)')
+                    count +=1
+                }
+                if (funAfter === true) {
+                    promises.push("Remember to do something fun!")
+                    count += 1
+                }
+                if (eatenLater === true) {
+                    promises.push('Please remember to eat something!')
+                    count += 1
+                }
+                if (journalLater === true) {
+                    promises.push("I also think journaling about what you're feeling is a good idea.")
+                    count += 1
+                }
+                if (selfcareAfter === true) {
+                    selfcarereminder = `\n\nI also suggested you do this! ${selfcareItem}`
+                    count += 1
+                }
+                if (count > 4) {
+                    breakdown = '\n\nI know that may sound like a lot to do. Take a deep breath - you can do this!\nTake it one step at a time!'
+                }
+
+                if (promises.length > 0) {
+                    let promiseJoined = promises.join('\n- ')
+                    promiseString = `Here's a few reminders!\n${promiseJoined}`
+                } else {
+                    promiseString = `We're all done!`
+                }
+
+                finish.setDescription(`I hope you're feeling a bit better now.\n\n${promiseString}${selfcarereminder}${breakdown}\n\nThank you for checking in with me! Let me know if you need me again!`)
+
+                await listen.deferUpdate();
+                await listen.editReply({ embeds: [finish], components: [] })
+            }
+
+        })
     }
 
 })
