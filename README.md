@@ -17,3 +17,8 @@ If you'd like to test the bot first, please join the support server below. The b
 The support server for this bot is at https://discord.gg/ZAdZEmM6DW.
 
 Thank you!
+
+<details>
+<summary>(internal CCID)</summary>
+CCID.03.03.JS.void.0&SY-1&N
+</details>
